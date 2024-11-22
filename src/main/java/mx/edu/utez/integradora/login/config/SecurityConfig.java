@@ -2,6 +2,7 @@ package mx.edu.utez.integradora.login.config;
 
 import lombok.RequiredArgsConstructor;
 import mx.edu.utez.integradora.login.jwt.JwtAuthenticationFilter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -21,11 +22,17 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authProvider;
 
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(authRequest -> authRequest.requestMatchers("/auth/**").permitAll().anyRequest())
-                .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        return http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authRequest -> authRequest
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated())
+                .sessionManagement(sessionManager -> sessionManager
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 }
