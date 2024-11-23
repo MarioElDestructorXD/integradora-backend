@@ -1,4 +1,4 @@
-package mx.edu.utez.integradora.login.entity;
+package mx.edu.utez.integradora.domain.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package mx.edu.utez.integradora.login.auth;
+package mx.edu.utez.integradora.application.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,12 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class LoginRequest {
 
-    String name;
-    String firstSurname;
-    String secondSurname;
-    String phone;
     String email;
     String password;
 }

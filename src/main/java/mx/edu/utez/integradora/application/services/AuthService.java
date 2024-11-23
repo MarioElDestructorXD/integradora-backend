@@ -1,12 +1,13 @@
-package mx.edu.utez.integradora.login.auth;
+package mx.edu.utez.integradora.application.services;
 
 import lombok.RequiredArgsConstructor;
-import mx.edu.utez.integradora.login.entity.Role;
-import mx.edu.utez.integradora.login.entity.User;
-import mx.edu.utez.integradora.login.jwt.JwtService;
-import mx.edu.utez.integradora.login.repository.UserRepository;
+import mx.edu.utez.integradora.application.dtos.AuthResponse;
+import mx.edu.utez.integradora.application.dtos.LoginRequest;
+import mx.edu.utez.integradora.application.dtos.RegisterRequest;
+import mx.edu.utez.integradora.domain.entities.Role;
+import mx.edu.utez.integradora.domain.entities.User;
+import mx.edu.utez.integradora.infrastructure.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;

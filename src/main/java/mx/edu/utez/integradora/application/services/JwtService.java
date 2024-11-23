@@ -1,13 +1,11 @@
-package mx.edu.utez.integradora.login.jwt;
+package mx.edu.utez.integradora.application.services;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.core.io.support.EncodedResource;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;

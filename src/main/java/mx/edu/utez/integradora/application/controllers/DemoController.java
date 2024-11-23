@@ -1,4 +1,4 @@
-package mx.edu.utez.integradora.login.controller;
+package mx.edu.utez.integradora.application.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

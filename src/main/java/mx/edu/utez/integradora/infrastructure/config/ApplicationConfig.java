@@ -1,7 +1,7 @@
-package mx.edu.utez.integradora.login.config;
+package mx.edu.utez.integradora.infrastructure.config;
 
 import lombok.RequiredArgsConstructor;
-import mx.edu.utez.integradora.login.repository.UserRepository;
+import mx.edu.utez.integradora.infrastructure.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

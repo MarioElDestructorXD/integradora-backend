@@ -1,6 +1,6 @@
-package mx.edu.utez.integradora.login.repository;
+package mx.edu.utez.integradora.infrastructure.repository;
 
-import mx.edu.utez.integradora.login.entity.User;
+import mx.edu.utez.integradora.domain.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
