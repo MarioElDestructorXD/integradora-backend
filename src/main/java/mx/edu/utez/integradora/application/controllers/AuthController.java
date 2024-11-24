@@ -24,4 +24,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request){
         return ResponseEntity.ok(authService.register(request));
     }
+
+    @GetMapping("verify")
+    public ResponseEntity<String> verify(@RequestParam("code") String code) {
+        return ResponseEntity.ok(authService.verifyUser(code));
+    }
 }

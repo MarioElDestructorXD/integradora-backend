@@ -29,6 +29,10 @@ public class User implements UserDetails {
     String phone;
     String email;
     String password;
+    @Column(nullable = true)
+    private String verificationCode;
+    @Column(nullable = false)
+    private boolean isVerified = false;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     Role role;

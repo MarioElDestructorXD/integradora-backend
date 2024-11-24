@@ -18,5 +18,7 @@ public class RegisterRequest {
     String phone;
     String email;
     String password;
+    String verificationCode;
+    boolean isVerified = false;
     Role role;
 }

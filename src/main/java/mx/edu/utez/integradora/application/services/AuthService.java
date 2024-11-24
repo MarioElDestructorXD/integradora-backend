@@ -13,6 +13,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -21,32 +24,50 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final EmailService emailService;
 
 
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        UserDetails user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        // Valida el inicio de sesión y verifica si el usuario está confirmado
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (!user.isVerified()) {
+            throw new RuntimeException("Por favor verifica tu correo electrónico antes de iniciar sesión.");
+        }
+
+        // Continuar con el flujo normal de generación de token
         String token = jwtService.getToken(user);
-        return AuthResponse.builder()
-                .token(token)
-                .role(((User) user).getRole()) // Incluye el rol en la respuesta
-                .build();
+
+        return AuthResponse.builder().token(token).role(user.getRole()).build();
     }
 
     public AuthResponse register(RegisterRequest request) {
-        Role role = request.getRole() != null ? request.getRole() : Role.USER; // Default a USER si no se especifica un rol
-        User user = User.builder()
-                .name(request.getName())
-                .firstSurname(request.getFirstSurname())
-                .secondSurname(request.getSecondSurname())
-                .phone(request.getPhone())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .build();
+        String verificationCode = UUID.randomUUID().toString(); // Generar código único
+
+        User user = User.builder().name(request.getName()).firstSurname(request.getFirstSurname()).secondSurname(request.getSecondSurname()).phone(request.getPhone()).email(request.getEmail()).password(passwordEncoder.encode(request.getPassword())).verificationCode(verificationCode).isVerified(false).role(request.getRole()).build();
+
         userRepository.save(user);
-        return AuthResponse.builder()
-                .token(jwtService.getToken(user))
-                .build();
+
+        // Enviar correo de verificación
+        String verificationLink = "http://localhost:8080/auth/verify?code=" + verificationCode;
+        emailService.sendVerificationEmail(user.getEmail(), "Verifica tu correo", "Por favor haz clic en el siguiente enlace para verificar tu cuenta: " + verificationLink);
+
+        return AuthResponse.builder().token("Usuario registrado. Verifica tu correo electrónico para activar tu cuenta.").role(null).build();
     }
+
+    public String verifyUser(String code) {
+        Optional<User> userOptional = userRepository.findByVerificationCode(code);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.isVerified()) {
+                return "El usuario ya está verificado.";
+            }
+            user.setVerified(true);
+            user.setVerificationCode(null); // Limpiar el código de verificación
+            userRepository.save(user);
+            return "Usuario verificado con éxito.";
+        }
+        return "Código de verificación inválido.";
+    }
+
 }
