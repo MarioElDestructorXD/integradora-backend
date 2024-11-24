@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import mx.edu.utez.integradora.domain.entities.Role;
 
 @Data
 @Builder
@@ -17,4 +18,5 @@ public class RegisterRequest {
     String phone;
     String email;
     String password;
+    Role role;
 }

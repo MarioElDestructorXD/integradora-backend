@@ -20,7 +20,7 @@ import java.util.List;
 @Table(name = "user", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
 public class User implements UserDetails {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Integer id;
     @Column(nullable = false)
     String name;
@@ -29,6 +29,7 @@ public class User implements UserDetails {
     String phone;
     String email;
     String password;
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     Role role;
 
@@ -39,7 +40,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email; // Cambiar de "" a `email`
+        return email;
     }
 
     @Override

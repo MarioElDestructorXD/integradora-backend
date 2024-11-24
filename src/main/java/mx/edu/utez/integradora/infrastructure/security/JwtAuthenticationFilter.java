@@ -53,6 +53,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+                String role = jwtService.getAllClaims(token).get("role", String.class);
+                System.out.println("Rol del usuario autenticado: " + role);
             }
         }
 

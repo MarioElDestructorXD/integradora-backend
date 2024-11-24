@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import mx.edu.utez.integradora.domain.entities.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,12 @@ public class JwtService {
     private static final String SECRET_KEY = "tLyEUOWj5hNRTUeV6CMlMAOG6gUp+jVxf9wQzKSkMyk=";
 
     public String getToken(UserDetails user) {
+        if (user instanceof User) {
+            User customUser = (User) user;
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", customUser.getRole().name());
+            return getToken(claims, customUser);
+        }
         return getToken(new HashMap<>(), user);
     }
 
@@ -56,7 +63,7 @@ public class JwtService {
     }
 
 
-    private Claims getAllClaims(String token) {
+    public Claims getAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getKey())

@@ -29,10 +29,12 @@ public class AuthService {
         String token = jwtService.getToken(user);
         return AuthResponse.builder()
                 .token(token)
+                .role(((User) user).getRole()) // Incluye el rol en la respuesta
                 .build();
     }
 
     public AuthResponse register(RegisterRequest request) {
+        Role role = request.getRole() != null ? request.getRole() : Role.USER; // Default a USER si no se especifica un rol
         User user = User.builder()
                 .name(request.getName())
                 .firstSurname(request.getFirstSurname())
@@ -40,7 +42,7 @@ public class AuthService {
                 .phone(request.getPhone())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(role)
                 .build();
         userRepository.save(user);
         return AuthResponse.builder()
