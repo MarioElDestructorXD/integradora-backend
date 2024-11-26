@@ -33,8 +33,14 @@ public class SecurityConfig {
                 .authenticationProvider(authProvider)
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/menu").authenticated()
+                        .requestMatchers("/api/problemas/**").authenticated()
+                        .requestMatchers("/api/proveedores/**").authenticated()
                         .requestMatchers("/api/repair-post/**").authenticated()
                         .anyRequest().authenticated())
+                .sessionManagement(sessionManager -> sessionManager
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
