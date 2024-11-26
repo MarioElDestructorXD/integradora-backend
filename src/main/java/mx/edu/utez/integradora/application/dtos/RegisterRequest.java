@@ -21,4 +21,5 @@ public class RegisterRequest {
     String verificationCode;
     boolean isVerified = false;
     Role role;
+    private String photo; // Campo para la foto codificada en Base64
 }

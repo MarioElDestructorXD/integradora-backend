@@ -33,9 +33,10 @@ public class User implements UserDetails {
     private String verificationCode;
     @Column(nullable = false)
     private boolean isVerified = false;
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     Role role;
+    @Lob
+    private byte[] photo;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
