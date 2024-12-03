@@ -27,31 +27,39 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(AbstractHttpConfigurer::disable) // Deshabilitar CSRF para APIs RESTful
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS
+                .sessionManagement(sessionManager -> sessionManager.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin sesiones
                 .authenticationProvider(authProvider)
                 .authorizeHttpRequests(authRequest -> authRequest
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/menu").authenticated()
+                        .requestMatchers("/auth/login", "/auth/register", "/auth/verify").permitAll() // Permitir acceso sin autenticación
+                        // Permitir acceso libre a los endpoints de autenticación
+                        .requestMatchers("/api/menu").authenticated() // Requiere autenticación
                         .requestMatchers("/api/problemas/**").authenticated()
                         .requestMatchers("/api/proveedores/**").authenticated()
                         .requestMatchers("/api/repair-post/**").authenticated()
-                        .anyRequest().authenticated())
-                .sessionManagement(sessionManager -> sessionManager
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                        .anyRequest().authenticated()) // Cualquier otra solicitud requiere autenticación
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Filtro JWT antes de la autenticación básica
                 .build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://mi-dominio.com")); // Dominios permitidos
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Métodos permitidos
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Headers permitidos
-        configuration.setAllowCredentials(true); // Permitir credenciales
+
+        // Permitir todos los orígenes
+        configuration.addAllowedOriginPattern("*"); // Cambiar a un origen específico en producción
+
+        // Métodos HTTP permitidos
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // Headers permitidos
+        configuration.setAllowedHeaders(List.of("*")); // Permite todos los encabezados
+
+        // Permitir credenciales (cookies, encabezados de autenticación, etc.)
+        configuration.setAllowCredentials(true);
+
+        // Aplicar configuración a todas las rutas
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

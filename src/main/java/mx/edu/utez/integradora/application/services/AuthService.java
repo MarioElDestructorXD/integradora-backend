@@ -31,14 +31,17 @@ public class AuthService {
 
 
     public AuthResponse login(LoginRequest request) {
-        // Valida el inicio de sesión y verifica si el usuario está confirmado
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Contraseña incorrecta");
+        }
 
         if (!user.isVerified()) {
             throw new RuntimeException("Por favor verifica tu correo electrónico antes de iniciar sesión.");
         }
 
-        // Continuar con el flujo normal de generación de token
         String token = jwtService.getToken(user);
 
         return AuthResponse.builder().token(token).role(user.getRole()).build();
@@ -140,7 +143,7 @@ public class AuthService {
     }
 
     private boolean isValidRole(Role role) {
-        return role == Role.ADMIN || role == Role.USER || role == Role.VENDOR;
+        return role == Role.PROVEEDOR || role == Role.CLIENTE;
     }
 
     public UserProfileDto getUserProfileByEmail(String email) {
@@ -157,6 +160,6 @@ public class AuthService {
                 .phone(user.getPhone())
                 .build();
     }
-
+    
 
 }
