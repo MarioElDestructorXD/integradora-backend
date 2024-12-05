@@ -4,6 +4,7 @@ import mx.edu.utez.integradora.domain.entities.Problema;
 import mx.edu.utez.integradora.application.services.ProblemaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,11 @@ public class ProblemaController {
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Problema>> obtenerProblemasPorUsuario(@PathVariable Integer usuarioId) {
         return ResponseEntity.ok(problemaService.getProblemasPorUsuario(usuarioId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Problema>> obtenerTodosLosProblemas() {
+        return ResponseEntity.ok(problemaService.getTodosLosProblemas());
     }
 
     @PostMapping

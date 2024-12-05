@@ -39,10 +39,22 @@ public class Problema {
     @Column(nullable = false)
     private EstadoProblema estado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CategoriaProblema categoria;
+
     public enum EstadoProblema {
         ABIERTO,
         EN_PROCESO,
         RESUELTO,
         CERRADO
     }
+
+    public enum CategoriaProblema {
+        CARPINTERIA,
+        PLOMERIA,
+        ELECTRICIDAD,
+        ALBAÑILERIA,
+    }
+
 }
