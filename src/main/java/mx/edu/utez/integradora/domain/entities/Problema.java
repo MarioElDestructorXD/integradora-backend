@@ -33,11 +33,15 @@ public class Problema {
 
     @ManyToOne
     @JoinColumn(name = "id_proveedor")
-    private User proveedor;
+    private Proveedor proveedor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoProblema estado;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CategoriaProblema categoria;
 
     public enum EstadoProblema {
         ABIERTO,
@@ -45,4 +49,12 @@ public class Problema {
         RESUELTO,
         CERRADO
     }
+
+    public enum CategoriaProblema {
+        CARPINTERIA,
+        PLOMERIA,
+        ELECTRICIDAD,
+        ALBAÑILERIA,
+    }
+
 }
