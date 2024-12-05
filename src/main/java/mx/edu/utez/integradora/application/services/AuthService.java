@@ -8,14 +8,12 @@ import mx.edu.utez.integradora.application.dtos.UserProfileDto;
 import mx.edu.utez.integradora.domain.entities.Role;
 import mx.edu.utez.integradora.domain.entities.User;
 import mx.edu.utez.integradora.infrastructure.repository.UserRepository;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,45 +24,48 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
 
+    // Método para realizar el login
+    public ResponseEntity<?> login(LoginRequest request) {
+        Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
 
-    public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (userOptional.isEmpty()) {
+            return new ResponseEntity<>("Usuario no encontrado. Por favor verifica el correo ingresado.", HttpStatus.NOT_FOUND);
+        }
+
+        User user = userOptional.get();
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
+            return new ResponseEntity<>("Contraseña incorrecta. Por favor, verifica e intenta nuevamente.", HttpStatus.UNAUTHORIZED);
         }
 
         if (!user.isVerified()) {
-            throw new RuntimeException("Por favor verifica tu correo electrónico antes de iniciar sesión.");
+            return new ResponseEntity<>("Cuenta no verificada. Revisa tu correo electrónico para activarla.", HttpStatus.FORBIDDEN);
         }
 
         String token = jwtService.getToken(user);
-
-        return AuthResponse.builder().token(token).role(user.getRole()).build();
+        return new ResponseEntity<>(AuthResponse.builder().token(token).role(user.getRole()).build(), HttpStatus.OK);
     }
 
-    public AuthResponse register(RegisterRequest request) {
+    // Método para registrar un nuevo usuario
+    public ResponseEntity<?> register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("El correo ya está registrado");
+            return new ResponseEntity<>("El correo ya está registrado. Por favor utiliza otro correo.", HttpStatus.CONFLICT);
+        }
+
+        if (request.getRole() == null || !isValidRole(request.getRole())) {
+            return new ResponseEntity<>("Rol inválido. Debes elegir un rol válido: CLIENTE o PROVEEDOR.", HttpStatus.BAD_REQUEST);
         }
 
         String verificationCode = UUID.randomUUID().toString();
-
-        // Validar que el role sea uno permitido
-        if (request.getRole() == null || !isValidRole(request.getRole())) {
-            throw new RuntimeException("Rol inválido");
-        }
 
         byte[] photo = null;
         if (request.getPhoto() != null && !request.getPhoto().isEmpty()) {
             try {
                 photo = Base64.getDecoder().decode(request.getPhoto());
             } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Formato de foto inválido.");
+                return new ResponseEntity<>("El formato de la foto no es válido.", HttpStatus.BAD_REQUEST);
             }
         }
 
@@ -82,75 +83,39 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+
         String verificationLink = "http://localhost:8080/auth/verify?code=" + verificationCode;
         emailService.sendVerificationEmail(user.getEmail(), "Verifica tu correo",
                 "Por favor haz clic en el siguiente enlace para verificar tu cuenta: " + verificationLink);
 
-        return AuthResponse.builder()
-                .token("Usuario registrado. Verifica tu correo electrónico para activar tu cuenta.")
-                .role(null)
-                .build();
+        return new ResponseEntity<>("Usuario registrado correctamente. Verifica tu correo electrónico para activar tu cuenta.", HttpStatus.CREATED);
     }
 
-    public String verifyUser(String code) {
+    // Método para verificar un usuario mediante el código de verificación
+    public ResponseEntity<?> verifyUser(String code) {
         Optional<User> userOptional = userRepository.findByVerificationCode(code);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            if (user.isVerified()) {
-                return "El usuario ya está verificado.";
-            }
-            user.setVerified(true);
-            user.setVerificationCode(null); // Limpiar el código de verificación
-            userRepository.save(user);
-            return "Usuario verificado con éxito.";
+
+        if (userOptional.isEmpty()) {
+            return new ResponseEntity<>("Código de verificación inválido. Por favor verifica el enlace.", HttpStatus.BAD_REQUEST);
         }
-        return "Código de verificación inválido.";
-    }
 
-    public User getUserById(Integer id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-    }
+        User user = userOptional.get();
+        if (user.isVerified()) {
+            return new ResponseEntity<>("El usuario ya está verificado.", HttpStatus.OK);
+        }
 
-    public String updateUser(Integer id, RegisterRequest request) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        user.setName(request.getName());
-        user.setFirstSurname(request.getFirstSurname());
-        user.setSecondSurname(request.getSecondSurname());
-        user.setPhone(request.getPhone());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
-
+        user.setVerified(true);
+        user.setVerificationCode(null); // Limpiar el código de verificación
         userRepository.save(user);
-        return "Usuario actualizado exitosamente";
+
+        return new ResponseEntity<>("Usuario verificado con éxito.", HttpStatus.OK);
     }
 
-    public String deleteUser(Integer id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado");
-        }
-        userRepository.deleteById(id);
-        return "Usuario eliminado exitosamente";
-    }
-
-    public List<User> getUnverifiedUsers() {
-        return userRepository.findByIsVerifiedFalse();
-    }
-
-    public List<User> searchUsers(String query) {
-        return userRepository.searchByNameOrEmail(query);
-    }
-
-    private boolean isValidRole(Role role) {
-        return role == Role.PROVEEDOR || role == Role.CLIENTE;
-    }
-
+    // Método para obtener el perfil de un usuario mediante el correo
     public UserProfileDto getUserProfileByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Convertir el usuario a un DTO para la respuesta
         return UserProfileDto.builder()
                 .name(user.getName())
                 .email(user.getEmail())
@@ -160,6 +125,9 @@ public class AuthService {
                 .phone(user.getPhone())
                 .build();
     }
-    
 
+    // Validar si el rol es válido
+    private boolean isValidRole(Role role) {
+        return role == Role.PROVEEDOR || role == Role.CLIENTE;
+    }
 }
