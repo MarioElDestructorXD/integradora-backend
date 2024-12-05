@@ -33,7 +33,7 @@ public class Problema {
 
     @ManyToOne
     @JoinColumn(name = "id_proveedor")
-    private User proveedor;
+    private Proveedor proveedor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
