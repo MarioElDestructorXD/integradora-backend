@@ -2,6 +2,7 @@ package mx.edu.utez.integradora.application.services;
 
 import mx.edu.utez.integradora.domain.entities.Problema;
 import mx.edu.utez.integradora.domain.entities.Proveedor;
+import mx.edu.utez.integradora.domain.entities.Role;
 import mx.edu.utez.integradora.domain.entities.User;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
 import mx.edu.utez.integradora.infrastructure.repository.ProveedorRepository;
@@ -62,14 +63,42 @@ public class ProblemaService {
         }
     }
 
-    public Problema asignarProblemaComoProveedor(Integer problemaId, Authentication authentication) {
-        String email = authentication.getName();
-        Proveedor proveedor = proveedorRepository.findByCorreo(email)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
-        Problema problema = problemaRepository.findById(problemaId)
-                .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
+    public Problema asignarProblemaAProveedor(Integer problemaId) {
+        // Obtener el usuario autenticado
+        User usuarioAutenticado = getUsuarioAutenticado();
 
-        problema.setProveedor(proveedor);
+        // Verificar que el usuario tiene el rol de PROVEEDOR
+        if (!usuarioAutenticado.getRole().equals(Role.PROVEEDOR)) {
+            throw new SecurityException("Solo los proveedores pueden aceptar problemas.");
+        }
+
+        // Buscar el problema
+        Problema problema = problemaRepository.findById(problemaId)
+                .orElseThrow(() -> new IllegalArgumentException("El problema con ID " + problemaId + " no existe"));
+
+        // Verificar que el problema no tenga ya un proveedor asignado
+        if (problema.getProveedor() != null) {
+            throw new IllegalArgumentException("El problema ya ha sido asignado a un proveedor.");
+        }
+
+        // Asignar el proveedor autenticado al problema y cambiar el estado
+        problema.setProveedor(usuarioAutenticado);
+        problema.setEstado(Problema.EstadoProblema.EN_PROCESO); // Cambiar el estado del problema
         return problemaRepository.save(problema);
     }
+
+    private User getUsuarioAutenticado() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof User) {
+            return (User) principal; // Devuelve el objeto User
+        } else if (principal instanceof String) {
+            // Si principal es un String, búscalo por email
+            return userRepository.findByEmail((String) principal)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado."));
+        }
+
+        throw new IllegalArgumentException("Principal no es un tipo válido.");
+    }
+
 }

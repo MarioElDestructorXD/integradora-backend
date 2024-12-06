@@ -45,8 +45,9 @@ public class ProblemaController {
         return ResponseEntity.ok(problemaService.actualizarProblema(problemaId, datosProblema));
     }
 
-    @PutMapping("/{problemaId}/asignar")
-    public ResponseEntity<Problema> asignarProblemaComoProveedor(@PathVariable Integer problemaId, Authentication authentication) {
-        return ResponseEntity.ok(problemaService.asignarProblemaComoProveedor(problemaId, authentication));
+    @PutMapping("/{problemaId}/aceptar")
+    public ResponseEntity<Problema> aceptarProblema(@PathVariable Integer problemaId) {
+        Problema problema = problemaService.asignarProblemaAProveedor(problemaId);
+        return ResponseEntity.ok(problema);
     }
 }

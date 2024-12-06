@@ -32,8 +32,8 @@ public class Problema {
     private User usuario;
 
     @ManyToOne
-    @JoinColumn(name = "id_proveedor")
-    private Proveedor proveedor;
+    @JoinColumn(name = "proveedor_id", referencedColumnName = "id")
+    private User proveedor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
