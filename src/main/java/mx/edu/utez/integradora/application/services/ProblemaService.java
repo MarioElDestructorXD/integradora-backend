@@ -64,24 +64,19 @@ public class ProblemaService {
     }
 
     public Problema asignarProblemaAProveedor(Integer problemaId) {
-        // Obtener el usuario autenticado
         User usuarioAutenticado = getUsuarioAutenticado();
 
-        // Verificar que el usuario tiene el rol de PROVEEDOR
         if (!usuarioAutenticado.getRole().equals(Role.PROVEEDOR)) {
             throw new SecurityException("Solo los proveedores pueden aceptar problemas.");
         }
 
-        // Buscar el problema
         Problema problema = problemaRepository.findById(problemaId)
                 .orElseThrow(() -> new IllegalArgumentException("El problema con ID " + problemaId + " no existe"));
 
-        // Verificar que el problema no tenga ya un proveedor asignado
         if (problema.getProveedor() != null) {
             throw new IllegalArgumentException("El problema ya ha sido asignado a un proveedor.");
         }
 
-        // Asignar el proveedor autenticado al problema y cambiar el estado
         problema.setProveedor(usuarioAutenticado);
         problema.setEstado(Problema.EstadoProblema.EN_PROCESO); // Cambiar el estado del problema
         return problemaRepository.save(problema);
@@ -99,6 +94,35 @@ public class ProblemaService {
         }
 
         throw new IllegalArgumentException("Principal no es un tipo válido.");
+    }
+
+    public boolean cancelarProblema(Integer problemaId, String username) {
+        Problema problema = problemaRepository.findById(problemaId)
+                .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
+
+        if (problema.getProveedor() == null ||
+                !problema.getProveedor().getUsername().equals(username)) {
+            return false;
+        }
+
+        problema.setEstado(Problema.EstadoProblema.ABIERTO);
+        problema.setProveedor(null);
+        problemaRepository.save(problema);
+        return true;
+    }
+
+    public boolean marcarComoTerminado(Integer problemaId, String username) {
+        Problema problema = problemaRepository.findById(problemaId)
+                .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
+
+        if (problema.getProveedor() == null ||
+                !problema.getProveedor().getUsername().equals(username)) {
+            return false; // No autorizado
+        }
+
+        problema.setEstado(Problema.EstadoProblema.CERRADO);
+        problemaRepository.save(problema);
+        return true;
     }
 
 }

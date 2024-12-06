@@ -46,7 +46,6 @@ public class Problema {
     public enum EstadoProblema {
         ABIERTO,
         EN_PROCESO,
-        RESUELTO,
         CERRADO
     }
 

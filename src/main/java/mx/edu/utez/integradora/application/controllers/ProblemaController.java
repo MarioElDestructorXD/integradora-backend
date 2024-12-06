@@ -50,4 +50,26 @@ public class ProblemaController {
         Problema problema = problemaService.asignarProblemaAProveedor(problemaId);
         return ResponseEntity.ok(problema);
     }
+
+    @PutMapping("/{problemaId}/cancelar")
+    public ResponseEntity<String> cancelarProblema(@PathVariable Integer problemaId, Authentication authentication) {
+        String username = authentication.getName(); // Usuario logueado
+        boolean resultado = problemaService.cancelarProblema(problemaId, username);
+        if (resultado) {
+            return ResponseEntity.ok("El problema ha sido reabierto y está disponible para otros proveedores.");
+        } else {
+            return ResponseEntity.badRequest().body("No se pudo cancelar el problema. Verifica si tienes permisos.");
+        }
+    }
+
+    @PutMapping("/{problemaId}/terminar")
+    public ResponseEntity<String> marcarComoTerminado(@PathVariable Integer problemaId, Authentication authentication) {
+        String username = authentication.getName(); // Usuario logueado
+        boolean resultado = problemaService.marcarComoTerminado(problemaId, username);
+        if (resultado) {
+            return ResponseEntity.ok("El problema ha sido marcado como cerrado.");
+        } else {
+            return ResponseEntity.badRequest().body("No se pudo marcar como cerrado. Verifica si tienes permisos.");
+        }
+    }
 }
