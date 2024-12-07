@@ -35,9 +35,15 @@ public class ProblemaController {
     }
 
     @PostMapping
-    public ResponseEntity<Problema> crearProblema(@RequestBody Problema problema) {
-        return ResponseEntity.ok(problemaService.crearProblema(problema));
+    public ResponseEntity<Problema> crearProblema(
+            @RequestBody Problema problema,
+            @RequestParam Double latitud,
+            @RequestParam Double longitud) {
+        return ResponseEntity.ok(problemaService.crearProblema(problema, latitud, longitud));
     }
+
+
+
 
     @PutMapping("/{problemaId}")
     public ResponseEntity<Problema> actualizarProblema(@PathVariable Integer problemaId,

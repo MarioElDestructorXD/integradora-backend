@@ -20,8 +20,8 @@ public class Proveedor implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_proveedor")
     private Integer id;
-
     @Column(nullable = false, length = 100)
     private String nombre;
 
@@ -47,6 +47,10 @@ public class Proveedor implements UserDetails {
     @Lob
     @Column(nullable = false)
     private byte[] fotografiaIne;
+
+    @OneToOne(mappedBy = "proveedor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Ubicacion ubicacion;
+
 
     // Métodos de UserDetails para integración con Spring Security
     @Override

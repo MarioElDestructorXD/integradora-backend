@@ -21,6 +21,9 @@ public class Problema {
     @Column(nullable = false, length = 255)
     private String titulo;
 
+    @Column(name = "firebase_location_id")
+    private String firebaseLocationId;
+
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
@@ -42,6 +45,18 @@ public class Problema {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CategoriaProblema categoria;
+
+    // Nuevos campos para almacenar la ubicación
+    @Column(nullable = false)
+    private Double latitud;
+
+    @Column(nullable = false)
+    private Double longitud;
+
+    @ManyToOne
+    @JoinColumn(name = "id_ubicacion", nullable = false)
+    private Ubicacion ubicacion;
+
 
     public enum EstadoProblema {
         ABIERTO,

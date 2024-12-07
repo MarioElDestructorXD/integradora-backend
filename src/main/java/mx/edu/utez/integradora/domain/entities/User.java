@@ -1,5 +1,6 @@
 package mx.edu.utez.integradora.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,9 @@ public class User implements UserDetails {
     Role role;
     @Lob
     private byte[] photo;
-
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    @JsonManagedReference // Esta anotación evitará la serialización infinita al tratar de convertir el JSON
+    private List<Ubicacion> ubicaciones;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
