@@ -1,14 +1,11 @@
 package mx.edu.utez.integradora.application.services;
 
 import mx.edu.utez.integradora.domain.entities.Problema;
-import mx.edu.utez.integradora.domain.entities.Proveedor;
 import mx.edu.utez.integradora.domain.entities.Role;
 import mx.edu.utez.integradora.domain.entities.User;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
-import mx.edu.utez.integradora.infrastructure.repository.ProveedorRepository;
 import mx.edu.utez.integradora.infrastructure.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -22,11 +19,14 @@ public class ProblemaService {
     private ProblemaRepository problemaRepository;
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private ProveedorRepository proveedorRepository;
 
     public List<Problema> getProblemasPorUsuario(Integer usuarioId) {
         return problemaRepository.findByUsuarioId(usuarioId);
+    }
+
+    public List<Problema> getProblemasUsuarioActual() {
+        User usuarioAutenticado = getUsuarioAutenticado();
+        return problemaRepository.findByUsuarioId(usuarioAutenticado.getId());
     }
 
     public Problema crearProblema(Problema problema) {

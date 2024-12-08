@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import mx.edu.utez.integradora.domain.entities.Role;
 
+import java.util.List;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -22,4 +24,5 @@ public class RegisterRequest {
     boolean isVerified = false;
     Role role;
     private String photo; // Campo para la foto codificada en Base64
+    private List<String> addresses; // Lista de direcciones proporcionadas por el usuario
 }

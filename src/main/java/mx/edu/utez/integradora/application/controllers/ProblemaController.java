@@ -4,6 +4,7 @@ import mx.edu.utez.integradora.domain.entities.Problema;
 import mx.edu.utez.integradora.application.services.ProblemaService;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,16 @@ public class ProblemaController {
     private ProblemaService problemaService;
     @Autowired
     private ProblemaRepository problemaRepository;
+
+    @GetMapping("/mis-problemas")
+    public ResponseEntity<List<Problema>> obtenerMisProblemas() {
+        try {
+            List<Problema> problemas = problemaService.getProblemasUsuarioActual();
+            return ResponseEntity.ok(problemas);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+    }
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Problema>> obtenerProblemasPorUsuario(@PathVariable Integer usuarioId) {
