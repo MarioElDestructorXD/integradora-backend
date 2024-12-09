@@ -6,18 +6,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "ubicacion")
 public class Ubicacion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer idUbicacion;
+    @Column(name = "id_ubicacion")
+    private Integer id;
 
     @Column(nullable = false)
     private String direccion;
@@ -29,12 +29,18 @@ public class Ubicacion {
     private Double longitud;
 
     @ManyToOne
-    @JoinColumn(name = "id_usuario")
-    @JsonBackReference // Esta anotación evita que la referencia hacia el usuario se serialice en cada ubicación
+    @JoinColumn(name = "id_usuario", nullable = true)
+    @JsonBackReference(value = "usuario-ubicacion") // Evita ciclos al serializar
     private User usuario;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor", nullable = true)
+    @JsonBackReference(value = "proveedor-ubicacion") // Evita ciclos al serializar
     private Proveedor proveedor;
 
-    // Getters y setters
+
 }
+
+
+
+

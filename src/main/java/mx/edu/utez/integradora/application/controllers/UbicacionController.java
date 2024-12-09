@@ -1,5 +1,6 @@
 package mx.edu.utez.integradora.application.controllers;
 
+import mx.edu.utez.integradora.application.dtos.UbicacionDTO;
 import mx.edu.utez.integradora.application.services.UbicacionService;
 import mx.edu.utez.integradora.domain.entities.Ubicacion;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +24,11 @@ public class UbicacionController {
     }
 
     // Endpoint para obtener todas las ubicaciones de un usuario
-    @GetMapping("/usuario/{userId}")
-    public ResponseEntity<List<Ubicacion>> obtenerUbicacionesPorUsuario(@PathVariable Integer userId) {
-        List<Ubicacion> ubicaciones = ubicacionService.obtenerUbicacionesPorUsuario(userId);
-        return ResponseEntity.ok(ubicaciones);
-    }
+//    @GetMapping("/usuario/{userId}")
+//    public ResponseEntity<List<Ubicacion>> obtenerUbicacionesPorUsuario(@PathVariable Integer userId) {
+//        List<Ubicacion> ubicaciones = ubicacionService.obtenerUbicacionesPorUsuario(userId);
+//        return ResponseEntity.ok(ubicaciones);
+//    }
 
     // Endpoint para eliminar una ubicación
     @DeleteMapping("/{ubicacionId}")
@@ -35,4 +36,12 @@ public class UbicacionController {
         ubicacionService.eliminarUbicacion(ubicacionId);
         return ResponseEntity.ok("Ubicación eliminada exitosamente");
     }
+
+    @GetMapping("/usuario/{idUsuario}")
+    public ResponseEntity<List<UbicacionDTO>> obtenerUbicacionesPorUsuario(@PathVariable Integer idUsuario) {
+        List<Ubicacion> ubicaciones = ubicacionService.obtenerUbicacionesPorUsuario(idUsuario);
+        List<UbicacionDTO> ubicacionesDTO = ubicacionService.convertToDTOList(ubicaciones);
+        return ResponseEntity.ok(ubicacionesDTO);
+    }
+
 }

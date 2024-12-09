@@ -62,30 +62,30 @@ public class ProblemaService {
     }
 
 
-    public Problema crearProblema(Problema problema, Double latitud, Double longitud) {
+    public Problema crearProblema(Problema problema, Integer ubicacionId) {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String emailUsuario = userDetails.getUsername();
         User usuario = userRepository.findByEmail(emailUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Crear la ubicación con latitud y longitud
-        Ubicacion ubicacion = new Ubicacion();
-        ubicacion.setLatitud(latitud);
-        ubicacion.setLongitud(longitud);
-        ubicacion.setUsuario(usuario);
+        // Buscar la ubicación seleccionada
+        Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
 
-        // Guardar la ubicación antes de asociarla al problema
-        ubicacionRepository.save(ubicacion);
+        // Validar que la ubicación pertenece al usuario autenticado
+        if (!ubicacion.getUsuario().equals(usuario)) {
+            throw new RuntimeException("La ubicación no pertenece al usuario autenticado");
+        }
 
         problema.setUsuario(usuario);
         problema.setUbicacion(ubicacion);
+        problema.setLatitud(ubicacion.getLatitud());
+        problema.setLongitud(ubicacion.getLongitud());
         problema.setEstado(Problema.EstadoProblema.ABIERTO);
-
-        // Almacenar también en Firebase
-        almacenarUbicacionEnFirebase(problema);
 
         return problemaRepository.save(problema);
     }
+
 
 
 

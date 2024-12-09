@@ -1,9 +1,14 @@
 package mx.edu.utez.integradora.application.controllers;
 
+import mx.edu.utez.integradora.application.dtos.ApiResponse;
+import mx.edu.utez.integradora.application.dtos.ProblemaRequestDTO;
 import mx.edu.utez.integradora.domain.entities.Problema;
 import mx.edu.utez.integradora.application.services.ProblemaService;
+import mx.edu.utez.integradora.domain.entities.Ubicacion;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
+import mx.edu.utez.integradora.infrastructure.repository.UbicacionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +23,8 @@ public class ProblemaController {
     private ProblemaService problemaService;
     @Autowired
     private ProblemaRepository problemaRepository;
+    @Autowired
+    private UbicacionRepository ubicacionRepository;
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Problema>> obtenerProblemasPorUsuario(@PathVariable Integer usuarioId) {
@@ -34,13 +41,28 @@ public class ProblemaController {
         return ResponseEntity.ok(problemaService.getTodosLosProblemas());
     }
 
-    @PostMapping
-    public ResponseEntity<Problema> crearProblema(
-            @RequestBody Problema problema,
-            @RequestParam Double latitud,
-            @RequestParam Double longitud) {
-        return ResponseEntity.ok(problemaService.crearProblema(problema, latitud, longitud));
+    @PostMapping("/post")
+    public ResponseEntity<ApiResponse> crearProblema(@RequestBody ProblemaRequestDTO problemaRequest) {
+        try {
+            Problema problema = new Problema();
+            problema.setTitulo(problemaRequest.getTitulo());
+            problema.setDescripcion(problemaRequest.getDescripcion());
+            problema.setCategoria(Problema.CategoriaProblema.valueOf(problemaRequest.getCategoria().toUpperCase()));
+            problema.setFotografia(problemaRequest.getFotografia().getBytes());
+
+            // Agregar ubicación al problema
+            Problema nuevoProblema = problemaService.crearProblema(problema, problemaRequest.getUbicacionId());
+
+            return ResponseEntity.ok(new ApiResponse("Problema creado exitosamente", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse("Error al crear el problema: " + e.getMessage(), "error"));
+        }
     }
+
+
+
+
 
 
 

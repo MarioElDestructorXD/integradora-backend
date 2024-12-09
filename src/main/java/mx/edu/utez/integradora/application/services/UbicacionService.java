@@ -1,5 +1,6 @@
 package mx.edu.utez.integradora.application.services;
 
+import mx.edu.utez.integradora.application.dtos.UbicacionDTO;
 import mx.edu.utez.integradora.domain.entities.Ubicacion;
 import mx.edu.utez.integradora.domain.entities.User;
 import mx.edu.utez.integradora.infrastructure.repository.UbicacionRepository;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UbicacionService {
@@ -17,6 +19,19 @@ public class UbicacionService {
 
     @Autowired
     private UserRepository userRepository;
+
+
+    public UbicacionDTO convertToDTO(Ubicacion ubicacion) {
+        return UbicacionDTO.builder()
+                .id(ubicacion.getId())
+                .direccion(ubicacion.getDireccion())
+                .latitud(ubicacion.getLatitud())
+                .longitud(ubicacion.getLongitud())
+                .idUsuario(ubicacion.getUsuario() != null ? ubicacion.getUsuario().getId() : null)
+                .idProveedor(ubicacion.getProveedor() != null ? ubicacion.getProveedor().getId() : null)
+                .build();
+    }
+
 
     public Ubicacion agregarUbicacion(Ubicacion ubicacion, Integer usuarioId) {
         User usuario = userRepository.findById(usuarioId)
@@ -28,6 +43,12 @@ public class UbicacionService {
 
         ubicacion.setUsuario(usuario);
         return ubicacionRepository.save(ubicacion);
+    }
+
+    public List<UbicacionDTO> convertToDTOList(List<Ubicacion> ubicaciones) {
+        return ubicaciones.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     public List<Ubicacion> obtenerUbicacionesPorUsuario(Integer usuarioId) {
