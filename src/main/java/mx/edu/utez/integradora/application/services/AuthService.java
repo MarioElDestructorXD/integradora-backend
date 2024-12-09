@@ -85,10 +85,11 @@ public class AuthService {
         userRepository.save(user);
 
         String verificationLink = "http://localhost:8080/auth/verify?code=" + verificationCode;
-        emailService.sendVerificationEmail(user.getEmail(), "Verifica tu correo",
-                "Por favor haz clic en el siguiente enlace para verificar tu cuenta: " + verificationLink);
 
-        return new ResponseEntity<>("Usuario registrado correctamente. Verifica tu correo electrónico para activar tu cuenta.", HttpStatus.CREATED);
+        // Envío del correo de verificación
+        emailService.sendVerificationEmail(user.getEmail(), verificationLink);
+
+        return new ResponseEntity<>("Usuario registrado correctamente. Verifica tu correo.", HttpStatus.CREATED);
     }
 
     // Método para verificar un usuario mediante el código de verificación

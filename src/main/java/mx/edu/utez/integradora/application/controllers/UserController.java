@@ -32,6 +32,7 @@ public class UserController {
 
             // Creamos el DTO y asignamos el nombre completo junto con otros datos
             UserProfileDto userProfileDto = UserProfileDto.builder()
+                    .id(user.getId())
                     .name(fullName)
                     .email(user.getEmail())
                     .role(user.getRole())

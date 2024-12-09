@@ -11,6 +11,7 @@ import mx.edu.utez.integradora.domain.entities.Role;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserProfileDto {
+    private Integer id;
     private String name;
     private String email;
     private Role role;
