@@ -77,4 +77,17 @@ public class ProblemaController {
     public ResponseEntity<Problema> asignarProblemaComoProveedor(@PathVariable Integer problemaId, Authentication authentication) {
         return ResponseEntity.ok(problemaService.asignarProblemaComoProveedor(problemaId, authentication));
     }
+
+
+    @GetMapping("/categorias")
+    public ResponseEntity<List<String>> obtenerCategorias() {
+        // Obtener los nombres de las categorías del ENUM
+        List<String> categorias = List.of(Problema.CategoriaProblema.values())
+                .stream()
+                .map(Enum::name)
+                .toList();
+        return ResponseEntity.ok(categorias);
+    }
+
+
 }

@@ -40,7 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/repair-post/**").authenticated()
                         .requestMatchers("/user/**").authenticated()
                         .requestMatchers("/api/ubicaciones/**").authenticated()
-                        .requestMatchers("/api/problemas/**").authenticated()
+                        .requestMatchers("/api/problemas/categorias").permitAll()
+//                        .requestMatchers("/api/problemas/**").permitAll()
                         .anyRequest().authenticated()) // Cualquier otra solicitud requiere autenticación
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Filtro JWT antes de la autenticación básica
                 .build();
