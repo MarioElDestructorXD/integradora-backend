@@ -2,8 +2,10 @@ package mx.edu.utez.integradora.application.services;
 
 import mx.edu.utez.integradora.domain.entities.Problema;
 import mx.edu.utez.integradora.domain.entities.Role;
+import mx.edu.utez.integradora.domain.entities.Ubicacion;
 import mx.edu.utez.integradora.domain.entities.User;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
+import mx.edu.utez.integradora.infrastructure.repository.UbicacionRepository;
 import mx.edu.utez.integradora.infrastructure.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,19 @@ public class ProblemaService {
     private ProblemaRepository problemaRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UbicacionRepository ubicacionRepository;
+
+    public Problema asignarUbicacionAProblema(Integer problemaId, Integer ubicacionId) {
+        Problema problema = problemaRepository.findById(problemaId)
+                .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
+
+        Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
+
+        problema.setUbicacion(ubicacion);
+        return problemaRepository.save(problema);
+    }
 
     public List<Problema> getProblemasPorUsuario(Integer usuarioId) {
         return problemaRepository.findByUsuarioId(usuarioId);

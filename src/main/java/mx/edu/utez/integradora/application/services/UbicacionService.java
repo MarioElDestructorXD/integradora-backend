@@ -57,6 +57,15 @@ public class UbicacionService {
         return ubicacionRepository.findByUsuario(usuario);
     }
 
+    public boolean verificarRol(Integer userId) {
+        User usuario = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Verificamos el rol del usuario
+        return "proveedor".equals(usuario.getRole());  // Asumiendo que el rol es 'proveedor'
+    }
+
+
     // Método para eliminar una ubicación por su ID
     public void eliminarUbicacion(Integer ubicacionId) {
         Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)

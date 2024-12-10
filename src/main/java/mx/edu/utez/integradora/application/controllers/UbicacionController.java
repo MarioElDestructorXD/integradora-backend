@@ -16,6 +16,17 @@ public class UbicacionController {
     @Autowired
     private UbicacionService ubicacionService;
 
+    @GetMapping("/usuario/{userId}/puedeAgregarDireccion")
+    public ResponseEntity<String> puedeAgregarDireccion(@PathVariable Integer userId) {
+        boolean tieneRol = ubicacionService.verificarRol(userId);
+
+        if (tieneRol) {
+            return ResponseEntity.status(403).body("El proveedor no puede agregar más direcciones.");
+        } else {
+            return ResponseEntity.ok("El usuario puede agregar una dirección.");
+        }
+    }
+
     // Endpoint para agregar una nueva ubicación para un usuario
     @PostMapping("/{userId}")
     public ResponseEntity<Ubicacion> agregarUbicacion(@RequestBody Ubicacion ubicacion, @PathVariable Integer userId) {

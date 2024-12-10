@@ -18,4 +18,6 @@ public class UserProfileDto {
     private String firstSurname;
     private String secondSurname;
     private String phone;
+    private byte[] photo;
+
 }

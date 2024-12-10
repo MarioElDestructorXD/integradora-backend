@@ -26,19 +26,18 @@ public class UserController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
-            // Concatenamos el nombre completo
-            String fullName = user.getName() + " " + (user.getFirstSurname() != null ? user.getFirstSurname() : "")
-                    + (user.getSecondSurname() != null ? " " + user.getSecondSurname() : "");
-
             // Creamos el DTO y asignamos el nombre completo junto con otros datos
             UserProfileDto userProfileDto = UserProfileDto.builder()
                     .id(user.getId())
-                    .name(fullName)
+                    .name(user.getName())
+                    .firstSurname(user.getFirstSurname())
+                    .secondSurname(user.getSecondSurname())
                     .email(user.getEmail())
                     .role(user.getRole())
                     .firstSurname(user.getFirstSurname())
                     .secondSurname(user.getSecondSurname())
                     .phone(user.getPhone())
+                    .photo(user.getPhoto())  // Asignamos la imagen base64
                     .build();
 
             return ResponseEntity.ok(userProfileDto);

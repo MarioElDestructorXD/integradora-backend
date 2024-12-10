@@ -21,10 +21,10 @@ public class Ubicacion {
     @Column(nullable = false)
     private String direccion;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double latitud;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double longitud;
 
     @ManyToOne

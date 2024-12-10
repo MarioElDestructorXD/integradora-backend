@@ -1,5 +1,6 @@
 package mx.edu.utez.integradora.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,6 +39,10 @@ public class User implements UserDetails {
     Role role;
     @Lob
     private byte[] photo;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "usuario-ubicacion")
+    private List<Ubicacion> ubicaciones;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

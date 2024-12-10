@@ -43,6 +43,10 @@ public class Problema {
     @Column(nullable = false)
     private CategoriaProblema categoria;
 
+    @ManyToOne
+    @JoinColumn(name = "id_ubicacion", nullable = true) // Relación con Ubicacion
+    private Ubicacion ubicacion;
+
     public enum EstadoProblema {
         ABIERTO,
         EN_PROCESO,
