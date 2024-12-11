@@ -21,10 +21,6 @@ public class ProblemaController {
 
     @Autowired
     private ProblemaService problemaService;
-    @Autowired
-    private ProblemaRepository problemaRepository;
-    @Autowired
-    private UbicacionRepository ubicacionRepository;
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Problema>> obtenerProblemasPorUsuario(@PathVariable Integer usuarioId) {
@@ -61,21 +57,55 @@ public class ProblemaController {
     }
 
 
-
-
-
-
-
-
     @PutMapping("/{problemaId}")
     public ResponseEntity<Problema> actualizarProblema(@PathVariable Integer problemaId,
                                                        @RequestBody Problema datosProblema) {
         return ResponseEntity.ok(problemaService.actualizarProblema(problemaId, datosProblema));
     }
 
-    @PutMapping("/{problemaId}/asignar")
-    public ResponseEntity<Problema> asignarProblemaComoProveedor(@PathVariable Integer problemaId, Authentication authentication) {
-        return ResponseEntity.ok(problemaService.asignarProblemaComoProveedor(problemaId, authentication));
+    @PutMapping("/{problemaId}/aceptar")
+    public ResponseEntity<Problema> aceptarProblema(@PathVariable Integer problemaId, Authentication authentication) {
+        try {
+            // Obtener el usuario autenticado
+            String username = authentication.getName();
+
+            // Llamar al servicio para asignar el problema al proveedor
+            Problema problema = problemaService.asignarProblemaAProveedor(problemaId, username);
+
+            return ResponseEntity.ok(problema);
+        } catch (SecurityException e) {
+            // Si el usuario no tiene el rol de proveedor
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        } catch (IllegalArgumentException e) {
+            // Si el problema no existe o ya está asignado
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            // Manejo de otros errores inesperados
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
+    @PutMapping("/{problemaId}/cancelar")
+    public ResponseEntity<String> cancelarProblema(@PathVariable Integer problemaId, Authentication authentication) {
+        String username = authentication.getName(); // Usuario logueado
+        boolean resultado = problemaService.cancelarProblema(problemaId, username);
+        if (resultado) {
+            return ResponseEntity.ok("El problema ha sido reabierto y está disponible para otros proveedores.");
+        } else {
+            return ResponseEntity.badRequest().body("No se pudo cancelar el problema. Verifica si tienes permisos.");
+        }
+    }
+
+    @PutMapping("/{problemaId}/terminar")
+    public ResponseEntity<String> marcarComoTerminado(@PathVariable Integer problemaId, Authentication authentication) {
+        String username = authentication.getName(); // Usuario logueado
+        boolean resultado = problemaService.marcarComoTerminado(problemaId, username);
+        if (resultado) {
+            return ResponseEntity.ok("El problema ha sido marcado como cerrado.");
+        } else {
+            return ResponseEntity.badRequest().body("No se pudo marcar como cerrado. Verifica si tienes permisos.");
+        }
     }
 
 

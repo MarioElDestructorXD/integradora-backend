@@ -35,8 +35,8 @@ public class Problema {
     private User usuario;
 
     @ManyToOne
-    @JoinColumn(name = "id_proveedor")
-    private Proveedor proveedor;
+    @JoinColumn(name = "proveedor_id", referencedColumnName = "id")
+    private User proveedor;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,14 +47,14 @@ public class Problema {
     private CategoriaProblema categoria;
 
     // Nuevos campos para almacenar la ubicación
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double latitud;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double longitud;
 
     @ManyToOne
-    @JoinColumn(name = "id_ubicacion", nullable = false)
+    @JoinColumn(name = "id_ubicacion", nullable = true)
     private Ubicacion ubicacion;
 
 

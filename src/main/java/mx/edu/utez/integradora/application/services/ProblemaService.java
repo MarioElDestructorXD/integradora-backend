@@ -1,9 +1,6 @@
 package mx.edu.utez.integradora.application.services;
 
-import mx.edu.utez.integradora.domain.entities.Problema;
-import mx.edu.utez.integradora.domain.entities.Proveedor;
-import mx.edu.utez.integradora.domain.entities.Ubicacion;
-import mx.edu.utez.integradora.domain.entities.User;
+import mx.edu.utez.integradora.domain.entities.*;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
 import mx.edu.utez.integradora.infrastructure.repository.ProveedorRepository;
 import mx.edu.utez.integradora.infrastructure.repository.UbicacionRepository;
@@ -16,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.api.core.ApiFuture;
+
 import java.util.List;
 
 @Service
@@ -86,10 +84,6 @@ public class ProblemaService {
         return problemaRepository.save(problema);
     }
 
-
-
-
-
     private void almacenarUbicacionEnFirebase(Problema problema) {
         try {
             FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -116,8 +110,6 @@ public class ProblemaService {
         }
     }
 
-
-
     public Problema actualizarProblema(Integer problemaId, Problema datosProblema) {
         Problema problema = problemaRepository.findById(problemaId)
                 .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
@@ -142,15 +134,61 @@ public class ProblemaService {
         }
     }
 
-    public Problema asignarProblemaComoProveedor(Integer problemaId, Authentication authentication) {
-        String email = authentication.getName();
-        Proveedor proveedor = proveedorRepository.findByCorreo(email)
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
+    public Problema asignarProblemaAProveedor(Integer problemaId, String username) {
+        // Obtener el usuario autenticado (proveedor)
+        User usuarioAutenticado = userRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("El proveedor no está registrado"));
+
+        // Verificar si el usuario es un proveedor
+        if (!usuarioAutenticado.getRole().equals(Role.PROVEEDOR)) {
+            throw new SecurityException("Solo los proveedores pueden aceptar problemas.");
+        }
+
+        // Buscar el problema
+        Problema problema = problemaRepository.findById(problemaId)
+                .orElseThrow(() -> new IllegalArgumentException("El problema con ID " + problemaId + " no existe"));
+
+        // Verificar si ya tiene un proveedor asignado
+        if (problema.getProveedor() != null) {
+            throw new IllegalArgumentException("El problema ya ha sido asignado a un proveedor.");
+        }
+
+        // Asignar el proveedor al problema
+        problema.setProveedor(usuarioAutenticado);
+        problema.setEstado(Problema.EstadoProblema.EN_PROCESO); // Cambiar el estado a 'EN_PROCESO'
+
+        // Guardar el problema actualizado
+        return problemaRepository.save(problema);
+    }
+
+
+    public boolean cancelarProblema(Integer problemaId, String username) {
         Problema problema = problemaRepository.findById(problemaId)
                 .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
 
-        problema.setProveedor(proveedor);
-        return problemaRepository.save(problema);
+        if (problema.getProveedor() == null ||
+                !problema.getProveedor().getUsername().equals(username)) {
+            return false;
+        }
+
+        problema.setEstado(Problema.EstadoProblema.ABIERTO);
+        problema.setProveedor(null);
+        problemaRepository.save(problema);
+        return true;
+    }
+
+    public boolean marcarComoTerminado(Integer problemaId, String username) {
+        Problema problema = problemaRepository.findById(problemaId)
+                .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
+
+        if (problema.getProveedor() == null ||
+                !problema.getProveedor().getUsername().equals(username)) {
+            return false; // No autorizado
+        }
+
+        problema.setEstado(Problema.EstadoProblema.CERRADO);
+        problemaRepository.save(problema);
+        return true;
     }
 
 
