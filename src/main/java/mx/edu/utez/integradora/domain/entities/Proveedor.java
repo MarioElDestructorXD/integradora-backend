@@ -1,6 +1,4 @@
 package mx.edu.utez.integradora.domain.entities;
-
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,34 +15,44 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
-public class User implements UserDetails {
+@Table(name = "proveedor", uniqueConstraints = {@UniqueConstraint(columnNames = "correo")})
+public class Proveedor implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer id;
+    @Column(name = "id_proveedor")
+    private Integer id;
+    @Column(nullable = false, length = 100)
+    private String nombre;
+
+    @Column(nullable = false, length = 100)
+    private String apellidoPaterno;
+
+    @Column(length = 100)
+    private String apellidoMaterno;
+
+    @Column(length = 15)
+    private String telefono;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String correo;
+
     @Column(nullable = false)
-    String name;
-    String firstSurname;
-    String secondSurname;
-    String phone;
-    String email;
-    String password;
-    @Column(nullable = true)
-    private String verificationCode;
-    @Column(nullable = false)
-    private boolean isVerified = false;
+    private String contraseña;
+
     @Enumerated(EnumType.STRING)
-    Role role;
+    @Column(nullable = false)
+    private Role role;
+
     @Lob
-    private byte[] photo;
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference(value = "usuario-ubicacion")
-    private List<Ubicacion> ubicaciones;
+    @Column(nullable = false)
+    private byte[] fotografiaIne;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference(value = "usuario-ubicacion")
-    private List<Ubicacion> ubicaciones;
+    @OneToOne(mappedBy = "proveedor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Ubicacion ubicacion;
 
+
+    // Métodos de UserDetails para integración con Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
@@ -54,7 +60,12 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return correo;
+    }
+
+    @Override
+    public String getPassword() {
+        return contraseña; // Implementación requerida por UserDetails
     }
 
     @Override

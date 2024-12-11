@@ -21,6 +21,9 @@ public class Problema {
     @Column(nullable = false, length = 255)
     private String titulo;
 
+    @Column(name = "firebase_location_id")
+    private String firebaseLocationId;
+
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
@@ -43,13 +46,22 @@ public class Problema {
     @Column(nullable = false)
     private CategoriaProblema categoria;
 
+    // Nuevos campos para almacenar la ubicación
+    @Column(nullable = true)
+    private Double latitud;
+
+    @Column(nullable = true)
+    private Double longitud;
+
     @ManyToOne
-    @JoinColumn(name = "id_ubicacion", nullable = true) // Relación con Ubicacion
+    @JoinColumn(name = "id_ubicacion", nullable = true)
     private Ubicacion ubicacion;
+
 
     public enum EstadoProblema {
         ABIERTO,
         EN_PROCESO,
+        RESUELTO,
         CERRADO
     }
 
@@ -58,6 +70,7 @@ public class Problema {
         PLOMERIA,
         ELECTRICIDAD,
         ALBAÑILERIA,
+        JARDINERIA,
     }
 
 }

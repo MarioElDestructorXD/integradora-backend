@@ -1,16 +1,18 @@
 package mx.edu.utez.integradora.application.services;
 
-import mx.edu.utez.integradora.domain.entities.Problema;
-import mx.edu.utez.integradora.domain.entities.Role;
-import mx.edu.utez.integradora.domain.entities.Ubicacion;
-import mx.edu.utez.integradora.domain.entities.User;
+import mx.edu.utez.integradora.domain.entities.*;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
+import mx.edu.utez.integradora.infrastructure.repository.ProveedorRepository;
 import mx.edu.utez.integradora.infrastructure.repository.UbicacionRepository;
 import mx.edu.utez.integradora.infrastructure.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.api.core.ApiFuture;
 
 import java.util.List;
 
@@ -22,36 +24,90 @@ public class ProblemaService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
+    private ProveedorRepository proveedorRepository;
+    @Autowired
     private UbicacionRepository ubicacionRepository;
-
-    public Problema asignarUbicacionAProblema(Integer problemaId, Integer ubicacionId) {
-        Problema problema = problemaRepository.findById(problemaId)
-                .orElseThrow(() -> new RuntimeException("Problema no encontrado"));
-
-        Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)
-                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
-
-        problema.setUbicacion(ubicacion);
-        return problemaRepository.save(problema);
-    }
 
     public List<Problema> getProblemasPorUsuario(Integer usuarioId) {
         return problemaRepository.findByUsuarioId(usuarioId);
     }
 
-    public List<Problema> getProblemasUsuarioActual() {
-        User usuarioAutenticado = getUsuarioAutenticado();
-        return problemaRepository.findByUsuarioId(usuarioAutenticado.getId());
+    public class UbicacionProblema {
+        private Double latitude;
+        private Double longitude;
+
+        public UbicacionProblema(Double latitude, Double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        // Getters y setters
+        public Double getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(Double latitude) {
+            this.latitude = latitude;
+        }
+
+        public Double getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(Double longitude) {
+            this.longitude = longitude;
+        }
     }
 
-    public Problema crearProblema(Problema problema) {
+
+    public Problema crearProblema(Problema problema, Integer ubicacionId) {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String emailUsuario = userDetails.getUsername();
         User usuario = userRepository.findByEmail(emailUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Buscar la ubicación seleccionada
+        Ubicacion ubicacion = ubicacionRepository.findById(ubicacionId)
+                .orElseThrow(() -> new RuntimeException("Ubicación no encontrada"));
+
+        // Validar que la ubicación pertenece al usuario autenticado
+        if (!ubicacion.getUsuario().equals(usuario)) {
+            throw new RuntimeException("La ubicación no pertenece al usuario autenticado");
+        }
+
         problema.setUsuario(usuario);
+        problema.setUbicacion(ubicacion);
+        problema.setLatitud(ubicacion.getLatitud());
+        problema.setLongitud(ubicacion.getLongitud());
         problema.setEstado(Problema.EstadoProblema.ABIERTO);
+
         return problemaRepository.save(problema);
+    }
+
+    private void almacenarUbicacionEnFirebase(Problema problema) {
+        try {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            DatabaseReference reference = database.getReference("problemas");
+
+            String problemaId = String.valueOf(problema.getIdProblema());
+
+            // Utilizando ApiFuture para manejar el resultado de la operación asíncrona
+            ApiFuture<Void> future = reference.child(problemaId).setValueAsync(problema);
+
+            // Añadiendo callback para manejar el resultado de la operación asíncrona
+            future.addListener(() -> {
+                try {
+                    // Obtener el resultado para asegurarse de que la operación se completó correctamente
+                    future.get();
+                    System.out.println("Ubicación almacenada en Firebase con éxito.");
+                } catch (Exception e) {
+                    System.err.println("Error al almacenar la ubicación en Firebase: " + e.getMessage());
+                }
+            }, Runnable::run);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public Problema actualizarProblema(Integer problemaId, Problema datosProblema) {
@@ -78,38 +134,33 @@ public class ProblemaService {
         }
     }
 
-    public Problema asignarProblemaAProveedor(Integer problemaId) {
-        User usuarioAutenticado = getUsuarioAutenticado();
+    public Problema asignarProblemaAProveedor(Integer problemaId, String username) {
+        // Obtener el usuario autenticado (proveedor)
+        User usuarioAutenticado = userRepository.findByEmail(username)
+                .orElseThrow(() -> new IllegalArgumentException("El proveedor no está registrado"));
 
+        // Verificar si el usuario es un proveedor
         if (!usuarioAutenticado.getRole().equals(Role.PROVEEDOR)) {
             throw new SecurityException("Solo los proveedores pueden aceptar problemas.");
         }
 
+        // Buscar el problema
         Problema problema = problemaRepository.findById(problemaId)
                 .orElseThrow(() -> new IllegalArgumentException("El problema con ID " + problemaId + " no existe"));
 
+        // Verificar si ya tiene un proveedor asignado
         if (problema.getProveedor() != null) {
             throw new IllegalArgumentException("El problema ya ha sido asignado a un proveedor.");
         }
 
+        // Asignar el proveedor al problema
         problema.setProveedor(usuarioAutenticado);
-        problema.setEstado(Problema.EstadoProblema.EN_PROCESO); // Cambiar el estado del problema
+        problema.setEstado(Problema.EstadoProblema.EN_PROCESO); // Cambiar el estado a 'EN_PROCESO'
+
+        // Guardar el problema actualizado
         return problemaRepository.save(problema);
     }
 
-    private User getUsuarioAutenticado() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if (principal instanceof User) {
-            return (User) principal; // Devuelve el objeto User
-        } else if (principal instanceof String) {
-            // Si principal es un String, búscalo por email
-            return userRepository.findByEmail((String) principal)
-                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado."));
-        }
-
-        throw new IllegalArgumentException("Principal no es un tipo válido.");
-    }
 
     public boolean cancelarProblema(Integer problemaId, String username) {
         Problema problema = problemaRepository.findById(problemaId)
@@ -139,5 +190,6 @@ public class ProblemaService {
         problemaRepository.save(problema);
         return true;
     }
+
 
 }

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
@@ -21,10 +22,10 @@ public class Ubicacion {
     @Column(nullable = false)
     private String direccion;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private Double latitud;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private Double longitud;
 
     @ManyToOne
@@ -35,7 +36,7 @@ public class Ubicacion {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor", nullable = true)
     @JsonBackReference(value = "proveedor-ubicacion") // Evita ciclos al serializar
-    private User proveedor;
+    private Proveedor proveedor;
 
 
 }

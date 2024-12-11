@@ -1,8 +1,12 @@
 package mx.edu.utez.integradora.application.controllers;
 
+import mx.edu.utez.integradora.application.dtos.ApiResponse;
+import mx.edu.utez.integradora.application.dtos.ProblemaRequestDTO;
 import mx.edu.utez.integradora.domain.entities.Problema;
 import mx.edu.utez.integradora.application.services.ProblemaService;
+import mx.edu.utez.integradora.domain.entities.Ubicacion;
 import mx.edu.utez.integradora.infrastructure.repository.ProblemaRepository;
+import mx.edu.utez.integradora.infrastructure.repository.UbicacionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,18 +21,6 @@ public class ProblemaController {
 
     @Autowired
     private ProblemaService problemaService;
-    @Autowired
-    private ProblemaRepository problemaRepository;
-
-    @GetMapping("/mis-problemas")
-    public ResponseEntity<List<Problema>> obtenerMisProblemas() {
-        try {
-            List<Problema> problemas = problemaService.getProblemasUsuarioActual();
-            return ResponseEntity.ok(problemas);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-    }
 
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<Problema>> obtenerProblemasPorUsuario(@PathVariable Integer usuarioId) {
@@ -45,10 +37,25 @@ public class ProblemaController {
         return ResponseEntity.ok(problemaService.getTodosLosProblemas());
     }
 
-    @PostMapping
-    public ResponseEntity<Problema> crearProblema(@RequestBody Problema problema) {
-        return ResponseEntity.ok(problemaService.crearProblema(problema));
+    @PostMapping("/post")
+    public ResponseEntity<ApiResponse> crearProblema(@RequestBody ProblemaRequestDTO problemaRequest) {
+        try {
+            Problema problema = new Problema();
+            problema.setTitulo(problemaRequest.getTitulo());
+            problema.setDescripcion(problemaRequest.getDescripcion());
+            problema.setCategoria(Problema.CategoriaProblema.valueOf(problemaRequest.getCategoria().toUpperCase()));
+            problema.setFotografia(problemaRequest.getFotografia().getBytes());
+
+            // Agregar ubicación al problema
+            Problema nuevoProblema = problemaService.crearProblema(problema, problemaRequest.getUbicacionId());
+
+            return ResponseEntity.ok(new ApiResponse("Problema creado exitosamente", "success"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse("Error al crear el problema: " + e.getMessage(), "error"));
+        }
     }
+
 
     @PutMapping("/{problemaId}")
     public ResponseEntity<Problema> actualizarProblema(@PathVariable Integer problemaId,
@@ -57,10 +64,27 @@ public class ProblemaController {
     }
 
     @PutMapping("/{problemaId}/aceptar")
-    public ResponseEntity<Problema> aceptarProblema(@PathVariable Integer problemaId) {
-        Problema problema = problemaService.asignarProblemaAProveedor(problemaId);
-        return ResponseEntity.ok(problema);
+    public ResponseEntity<Problema> aceptarProblema(@PathVariable Integer problemaId, Authentication authentication) {
+        try {
+            // Obtener el usuario autenticado
+            String username = authentication.getName();
+
+            // Llamar al servicio para asignar el problema al proveedor
+            Problema problema = problemaService.asignarProblemaAProveedor(problemaId, username);
+
+            return ResponseEntity.ok(problema);
+        } catch (SecurityException e) {
+            // Si el usuario no tiene el rol de proveedor
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        } catch (IllegalArgumentException e) {
+            // Si el problema no existe o ya está asignado
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            // Manejo de otros errores inesperados
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
+
 
     @PutMapping("/{problemaId}/cancelar")
     public ResponseEntity<String> cancelarProblema(@PathVariable Integer problemaId, Authentication authentication) {
@@ -83,4 +107,17 @@ public class ProblemaController {
             return ResponseEntity.badRequest().body("No se pudo marcar como cerrado. Verifica si tienes permisos.");
         }
     }
+
+
+    @GetMapping("/categorias")
+    public ResponseEntity<List<String>> obtenerCategorias() {
+        // Obtener los nombres de las categorías del ENUM
+        List<String> categorias = List.of(Problema.CategoriaProblema.values())
+                .stream()
+                .map(Enum::name)
+                .toList();
+        return ResponseEntity.ok(categorias);
+    }
+
+
 }
