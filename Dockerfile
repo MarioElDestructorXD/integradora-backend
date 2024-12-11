@@ -13,5 +13,5 @@ COPY . .
 RUN mvn clean package -DskipTests
 FROM openjdk:22-slim
 WORKDIR /app
-COPY --from=build /app/target/0.0.1-SNAPSHOT.jar ./app.jar
+COPY --from=build /app/target/integradora-0.0.1-SNAPSHOT.jar ./app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
