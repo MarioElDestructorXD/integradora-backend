@@ -37,8 +37,8 @@ public class UbicacionService {
         User usuario = userRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        if (ubicacionRepository.countByUsuario(usuario) >= 3) {
-            throw new RuntimeException("No se pueden agregar más de 3 ubicaciones");
+        if (ubicacionRepository.countByUsuario(usuario) >= 1) {
+            throw new RuntimeException("No se pueden agregar más de 1 ubicacion, MODIFICACION EN VIVO");
         }
 
         ubicacion.setUsuario(usuario);
