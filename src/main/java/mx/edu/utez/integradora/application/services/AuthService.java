@@ -84,7 +84,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String verificationLink = "http://localhost:8080/auth/verify?code=" + verificationCode;
+        String verificationLink = "http://52.86.242.121:8085/auth/verify?code=" + verificationCode;
 
         // Envío del correo de verificación
         emailService.sendVerificationEmail(user.getEmail(), verificationLink);
