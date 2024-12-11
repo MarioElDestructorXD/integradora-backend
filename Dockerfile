@@ -1,28 +1,17 @@
-version: '3.8'
-
-services:
-  mysql-db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: fixypro
-      MYSQL_USER: fixypro
-      MYSQL_PASSWORD: fixypro
-    volumes:
-      - ./mysql-data:/var/lib/mysql
-    ports:
-      - "3310:3306"
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/fixypro
-      SPRING_DATASOURCE_USERNAME: fixypro
-      SPRING_DATASOURCE_PASSWORD: fixypro
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    ports:
-      - "8085:8080"
-    depends_on:
-      - mysql-db
+FROM openjdk:22-slim AS build
+RUN apt-get update && apt-get install -y \
+    curl \
+    tar \
+    && curl -fsSL https://archive.apache.org/dist/maven/maven-3/3.8.5/binaries/apache-maven-3.8.5-bin.tar.gz -o /tmp/maven.tar.gz \
+    && tar -xzf /tmp/maven.tar.gz -C /opt/ \
+    && ln -s /opt/apache-maven-3.8.5/bin/mvn /usr/bin/mvn \
+    && rm -f /tmp/maven.tar.gz
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY . .
+RUN mvn clean package -DskipTests
+FROM openjdk:22-slim
+WORKDIR /app
+COPY --from=build /app/target/baluEvents-0.0.1-SNAPSHOT.jar ./app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
