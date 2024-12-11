@@ -50,26 +50,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://52.86.242.121:8085,http://52.86.242.121:8080,http://52.86.242.121:8084,http://52.86.242.121:80")); // Dominios permitidos
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Métodos permitidos
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type")); // Headers permitidos
-        configuration.setAllowCredentials(true); // Permitir credenciales
+        // Permite todos los orígenes
+        configuration.addAllowedOriginPattern("*");
 
-        // Permitir todos los orígenes
-        configuration.addAllowedOriginPattern("*"); // Cambiar a un origen específico en producción
-
-        // Métodos HTTP permitidos
+        // Métodos permitidos
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
         // Headers permitidos
-        configuration.setAllowedHeaders(List.of("*")); // Permite todos los encabezados
+        configuration.setAllowedHeaders(List.of("*"));
 
-        // Permitir credenciales (cookies, encabezados de autenticación, etc.)
+        // Permitir credenciales (cookies, Authorization headers, etc.)
         configuration.setAllowCredentials(true);
 
-        // Aplicar configuración a todas las rutas
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
