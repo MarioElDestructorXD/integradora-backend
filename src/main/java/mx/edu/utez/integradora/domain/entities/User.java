@@ -43,9 +43,6 @@ public class User implements UserDetails {
     @JsonManagedReference(value = "usuario-ubicacion")
     private List<Ubicacion> ubicaciones;
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference(value = "usuario-ubicacion")
-    private List<Ubicacion> ubicaciones;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
